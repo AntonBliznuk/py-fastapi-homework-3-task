@@ -43,5 +43,7 @@ def get_jwt_auth_manager(settings: BaseAppSettings = Depends(get_settings)) -> J
     return JWTAuthManager(
         secret_key_access=settings.SECRET_KEY_ACCESS,
         secret_key_refresh=settings.SECRET_KEY_REFRESH,
+        secret_key_activation=settings.SECRET_KEY_ACTIVATION,
+        secret_key_password=settings.SECRET_KEY_PASSWORD,
         algorithm=settings.JWT_SIGNING_ALGORITHM
     )

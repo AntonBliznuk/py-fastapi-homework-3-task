@@ -15,12 +15,21 @@ class JWTAuthManager(JWTAuthManagerInterface):
     _ACCESS_KEY_TIMEDELTA_MINUTES = 10
     _REFRESH_KEY_TIMEDELTA_MINUTES = 60 * 24 * 7
 
-    def __init__(self, secret_key_access: str, secret_key_refresh: str, algorithm: str):
+    def __init__(
+            self,
+            secret_key_access: str,
+            secret_key_refresh: str,
+            secret_key_activation: str,
+            secret_key_password: str,
+            algorithm: str
+    ):
         """
         Initialize the manager with secret keys and algorithm for token operations.
         """
         self._secret_key_access = secret_key_access
         self._secret_key_refresh = secret_key_refresh
+        self._secret_key_activation = secret_key_activation
+        self._secret_key_password = secret_key_password
         self._algorithm = algorithm
 
     def _create_token(self, data: dict, secret_key: str, expires_delta: timedelta) -> str:
@@ -31,6 +40,20 @@ class JWTAuthManager(JWTAuthManagerInterface):
         expire = datetime.now(timezone.utc) + expires_delta
         to_encode.update({"exp": expire})
         return jwt.encode(to_encode, secret_key, algorithm=self._algorithm)
+
+    def create_activation_token(self, data: dict, expires_delta: Optional[timedelta] = None) -> str:
+        return self._create_token(
+            data,
+            self._secret_key_activation,
+            expires_delta or timedelta(hours=24)
+        )
+
+    def create_password_reset_token(self, data: dict, expires_delta: Optional[timedelta] = None) -> str:
+        return self._create_token(
+            data,
+            self._secret_key_password,
+            expires_delta or timedelta(hours=24)
+        )
 
     def create_access_token(self, data: dict, expires_delta: Optional[timedelta] = None) -> str:
         """
@@ -49,6 +72,28 @@ class JWTAuthManager(JWTAuthManagerInterface):
             data,
             self._secret_key_refresh,
             expires_delta or timedelta(minutes=self._REFRESH_KEY_TIMEDELTA_MINUTES))
+
+    def decode_activation_token(self, token: str) -> dict:
+        """
+        Decode and validate an activation token, returning the token's data.
+        """
+        try:
+            return jwt.decode(token, self._secret_key_activation, algorithms=[self._algorithm])
+        except ExpiredSignatureError:
+            raise TokenExpiredError
+        except JWTError:
+            raise InvalidTokenError
+
+    def decode_password_reset_token(self, token: str) -> dict:
+        """
+        Decode and validate an password reset token, returning the token's data.
+        """
+        try:
+            return jwt.decode(token, self._secret_key_password, algorithms=[self._algorithm])
+        except ExpiredSignatureError:
+            raise TokenExpiredError
+        except JWTError:
+            raise InvalidTokenError
 
     def decode_access_token(self, token: str) -> dict:
         """
@@ -84,3 +129,15 @@ class JWTAuthManager(JWTAuthManagerInterface):
         Verify an access token and raise an error if it's invalid or expired.
         """
         self.decode_access_token(token)
+
+    def verify_activation_token_or_raise(self, token: str) -> None:
+        """
+        Verify an activation token and raise an error if it's invalid or expired.
+        """
+        self.decode_activation_token(token)
+
+    def verify_password_reset_token_or_raise(self, token: str) -> None:
+        """
+        Verify an password reset token and raise an error if it's invalid or expired.
+        """
+        self.decode_password_reset_token(token)

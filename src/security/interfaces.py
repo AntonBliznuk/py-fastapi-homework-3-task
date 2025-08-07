@@ -17,6 +17,20 @@ class JWTAuthManagerInterface(ABC):
         pass
 
     @abstractmethod
+    def create_activation_token(self, data: dict, expires_delta: Optional[timedelta] = None) -> str:
+        """
+        Create a new activation token.
+        """
+        pass
+
+    @abstractmethod
+    def create_password_reset_token(self, data: dict, expires_delta: Optional[timedelta] = None) -> str:
+        """
+        Create a new password reset token.
+        """
+        pass
+
+    @abstractmethod
     def create_refresh_token(self, data: dict, expires_delta: Optional[timedelta] = None) -> str:
         """
         Create a new refresh token.
@@ -38,6 +52,20 @@ class JWTAuthManagerInterface(ABC):
         pass
 
     @abstractmethod
+    def decode_activation_token(self, token: str) -> dict:
+        """
+        Decode and validate a activation token.
+        """
+        pass
+
+    @abstractmethod
+    def decode_password_reset_token(self, token: str) -> dict:
+        """
+        Decode and validate a password reset token.
+        """
+        pass
+
+    @abstractmethod
     def verify_refresh_token_or_raise(self, token: str) -> None:
         """
         Verify a refresh token or raise an error if invalid.
@@ -48,5 +76,19 @@ class JWTAuthManagerInterface(ABC):
     def verify_access_token_or_raise(self, token: str) -> None:
         """
         Verify an access token or raise an error if invalid.
+        """
+        pass
+
+    @abstractmethod
+    def verify_activation_token_or_raise(self, token: str) -> None:
+        """
+        Verify an activation token or raise an error if invalid.
+        """
+        pass
+
+    @abstractmethod
+    def verify_password_reset_token_or_raise(self, token: str) -> None:
+        """
+        Verify an password reset token or raise an error if invalid.
         """
         pass
